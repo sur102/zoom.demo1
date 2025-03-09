@@ -1,23 +1,35 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Draggable from "react-draggable";
-import PerfectScrollbar from "react-perfect-scrollbar";
-import "react-perfect-scrollbar/dist/css/styles.css";
+import PerfectScrollbar from "perfect-scrollbar";
+import "perfect-scrollbar/css/perfect-scrollbar.css";
+import styled from "styled-components";
+
+const Wrapper = styled.div`
+  margin: 20px;
+  @media (max-width: 768px) {
+    margin: 20px;
+  }
+`;
 
 const styles = {
-  wrapper: {
-    padding: "20px",
-  },
   scrollWrapper: {
     width: "800px",
-    height: "600px",
+    height: "300px",
     border: "1px solid #ccc",
     background: "#f5f5f5",
+    "@media (max-width: 768px)": {
+      width: "100%",
+      height: "400px",
+      // padding: "20px",
+    },
   },
   contentArea: {
     width: "2000px",
     height: "1800px",
+    // background:
+    //   "linear-gradient(45deg, #f0f0f0 25%, #e0e0e0 25%, #e0e0e0 50%, #f0f0f0 50%, #f0f0f0 75%, #e0e0e0 75%, #e0e0e0 100%)",
     background:
-      "linear-gradient(45deg, #f0f0f0 25%, #e0e0e0 25%, #e0e0e0 50%, #f0f0f0 50%, #f0f0f0 75%, #e0e0e0 75%, #e0e0e0 100%)",
+      "url(https://wallpapersmug.com/download/1920x1080/20fefb/dark-tree-sunset-landscape-art.jpg)",
     backgroundSize: "40px 40px",
     position: "relative",
   },
@@ -33,36 +45,81 @@ const styles = {
     cursor: "move",
     userSelect: "none",
     boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+    touchAction: "none",
   },
 };
 
 const TestScroll = () => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isScrollEnabled, setIsScrollEnabled] = useState(true);
+  const scrollContainerRef = useRef(null);
+  const ps = useRef(null);
   const [bounds, setBounds] = useState({
     left: 0,
     top: 0,
-    right: 1850, // 2000 - 150 (draggable width)
-    bottom: 1700, // 1800 - 100 (draggable height)
+    right: 1850,
+    bottom: 1700,
   });
+
+  useEffect(() => {
+    if (scrollContainerRef.current && isScrollEnabled) {
+      ps.current = new PerfectScrollbar(scrollContainerRef.current, {
+        wheelSpeed: 1,
+        wheelPropagation: true,
+        minScrollbarLength: 20,
+        suppressScrollX: false,
+        suppressScrollY: false,
+      });
+    }
+
+    return () => {
+      if (ps.current) {
+        ps.current.destroy();
+        ps.current = null;
+      }
+    };
+  }, [isScrollEnabled]);
 
   const handleDrag = (e, data) => {
     setPosition({ x: data.x, y: data.y });
+    if (ps.current) {
+      ps.current.update();
+    }
+  };
+
+  const handleDragStart = () => {
+    setIsDragging(true);
+    setIsScrollEnabled(false);
+    if (ps.current) {
+      ps.current.destroy();
+      ps.current = null;
+    }
+  };
+
+  const handleDragStop = () => {
+    setIsDragging(false);
+    setIsScrollEnabled(true);
+    if (scrollContainerRef.current) {
+      ps.current = new PerfectScrollbar(scrollContainerRef.current, {
+        wheelSpeed: 1,
+        wheelPropagation: true,
+        minScrollbarLength: 20,
+      });
+    }
   };
 
   return (
-    <div style={styles.wrapper}>
+    <Wrapper className="container">
       <div style={styles.scrollWrapper}>
         <div
+          ref={scrollContainerRef}
           style={{
-            width: "100vw !important",
-            height: "100vh !important",
-            overflow: "auto",
-          }}
-          options={{
-            wheelSpeed: 1,
-            wheelPropagation: true,
-            minScrollbarLength: 20,
+            position: "relative",
+            overflow: "hidden",
+            height: "100%",
+            width: "100%",
+            // touchAction: isScrollEnabled ? "auto" : "none",
           }}
         >
           <div style={styles.contentArea}>
@@ -70,8 +127,9 @@ const TestScroll = () => {
               position={position}
               onDrag={handleDrag}
               bounds={bounds}
-              onStart={() => setIsDragging(true)}
-              onStop={() => setIsDragging(false)}
+              onStart={handleDragStart}
+              onStop={handleDragStop}
+              enableUserSelectHack={false}
             >
               <div style={styles.draggableBox}>
                 {isDragging ? "Đang kéo..." : "Kéo tôi!"}
@@ -80,7 +138,7 @@ const TestScroll = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Wrapper>
   );
 };
 

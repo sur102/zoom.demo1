@@ -1,5 +1,5 @@
 {
-  "homepage": "https://sur102.github.io/custom.demo1/",
+  "homepage": "https://sur102.github.io/zoom.demo1/",
   "name": "given",
   "version": "0.1.0",
   "private": true,
@@ -28,6 +28,7 @@
     "react-scripts": "5.0.1",
     "react-zoom-pan-pinch": "^3.7.0",
     "sass": "^1.85.1",
+    "styled-components": "^6.1.15",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
